@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="include.js"></script>
+<script>kremlin.m['web-transit@0.1.0:index.html'] = (mod) => { mod.exports = "index.html"; };</script>
+<script src="main.ts.js"></script>
+<script src="app.vue.js"></script>
+<script src="index.js"></script>
+<script src="component.js"></script>
+<script src="accessor.js"></script>
+<script src="slot.js"></script>
+<script src="index-0.js"></script>
+<script src="metadata.js"></script>
+<script src="error.js"></script>
+<script src="utils.js"></script>
+<script src="class.js"></script>
+<script src="utils-0.js"></script>
+<script src="optionBuilder.js"></script>
+<script src="vmodel.js"></script>
+<script src="props.js"></script>
+<script src="emit.js"></script>
+<script src="provide.js"></script>
+<script src="vue.runtime.esm-bundler.js"></script>
+<script src="runtime-dom.esm-bundler.js"></script>
+<script src="runtime-core.esm-bundler.js"></script>
+<script src="shared.esm-bundler.js"></script>
+<script src="reactivity.esm-bundler.js"></script>
+<script src="inject.js"></script>
+<script src="watch.js"></script>
+<script src="ref.js"></script>
+<script src="methodsAndHooks.js"></script>
+<script src="data.js"></script>
+<script src="computed.js"></script>
+<script src="setup.js"></script>
+<script src="hooks.js"></script>
+<script src="type.js"></script>
+<script src="mixins.js"></script>
+<script src="custom.js"></script>
+<script src="vanilla.js"></script>
+<link href="app.vue.css" rel="stylesheet" type="text/css"><!-- transient -->
+
+<style>
+        /* Custom CSS to ensure the map container fills the remaining space */
+        #map {
+            width: 100%;
+            height: 80vh; /* Use viewport height for a large map area */
+        }
+        /* Ensure all elements use the specified font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    
+<script>kremlin.main('web-transit@0.1.0:src/main.ts', undefined);</script>
+        
+<script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        
+        <!-- Load MapLibre GL JS CSS and JavaScript -->
+        
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.1.0/dist/maplibre-gl.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.1.0/dist/maplibre-gl.css" rel="stylesheet">
+    </head>
+    <body>
+
+
+        <div class="w-full max-w-5xl bg-white shadow-2xl rounded-xl overflow-hidden p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">
+                Tel Aviv MapLibre GL JS Map
+            </h1>
+            <p class="text-blue-600 font-semibold mb-3 text-center">
+                ✅ Fix Applied: Switched map style URL to improve cross-origin compatibility.
+            </p>
+            <p class="text-gray-500 mb-6 text-center">
+                This map uses MapLibre GL JS to render vector tiles from a reliable, CORS-friendly source.
+            </p>
+            
+            <!-- The map will be rendered inside this div -->
+            <div id="map" class="rounded-lg border border-gray-200 shadow-md"></div>
+    
+            <div class="mt-4 p-2 text-sm text-center text-gray-400">
+                Center Coordinates (approx): 34.7818° E, 32.0853° N
+            </div>
+        </div>
+    
+        <script>
+            window.onload = function() {
+                //const STYLE_URL = 'https://api.maptiler.com/maps/basic-v2/style.json?key=oG3f2x4e0Q2a8E4f2w3a';
+                // New Style URL: CARTO Voyager - highly reliable and CORS-friendly
+                //const STYLE_URL = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+                const MVT_TILE_URL = 'https://openfreemap.org/tiles/v3/{z}/{x}/{y}.pbf';
+                const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+
+                // 1. Define the coordinates for Tel Aviv (Longitude, Latitude)
+                const telAvivLonLat = [34.7818, 32.0853];
+    
+                // 2. Initialize the MapLibre GL Map
+                const map = new maplibregl.Map({
+                    container: 'map', // ID of the container div
+                    style: STYLE_URL, // The reliable CARTO style URL
+                    center: telAvivLonLat, // Starting position [lng, lat]
+                    zoom: 13, // Starting zoom
+                    pitch: 0, 
+                    bearing: 0,
+                });
+    
+                // 3. Add navigation controls for a better user experience
+                map.addControl(new maplibregl.NavigationControl(), 'top-right');
+                
+                console.log("MapLibre GL JS initialized. Attempting to render map with new style.");
+            };
+        </script>        
+    </body>
+    <script>var k = kremlin.plug({window});</script>
+</html>
