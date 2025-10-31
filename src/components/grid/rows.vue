@@ -35,12 +35,18 @@ class IGridRows extends Vue {
     styleFor(cell: Cell, row: number, col: number) {
         return {'--rowspan': cell.rowspan,
                 '--rowstart': 1 + this.startPos.row + this.startHeight(row),
-                'grid-column': 1 + this.startPos.col + col}
+                '--colspan': cell.colspan,
+                '--colstart': 1 + this.startPos.col + this.startWidth(row, col)}
     }
 
     startHeight(row: number) {
         return _.sum(this.rows.slice(0, row).map(row =>
             row[0]?.rowspan ?? 1))
+    }
+
+    startWidth(row: number, col: number) {
+        return _.sum(this.rows[row].slice(0, col).map(cell =>
+            cell.colspan ?? 1));
     }
 }
 

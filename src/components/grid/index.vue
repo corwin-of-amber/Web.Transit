@@ -23,6 +23,7 @@ div.tabular {
         font-size: 80%;
         background-color: white;
         padding: 2px;
+        grid-column: var(--colstart) / span var(--colspan, 1);
         grid-row: var(--rowstart) / span var(--rowspan, 1);
     }
 
@@ -90,6 +91,7 @@ type Cell = {
 
     class?: string | string[]
     rowspan?: number
+    colspan?: number
 }
 //({text: string, class?: string | string[]} |
 // {subrows: string[]}) & {rowspan?: number}
