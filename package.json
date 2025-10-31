@@ -4,11 +4,14 @@
     "main": "build/kremlin/index.html",
     "dependencies": {
         "danfojs": "^1.2.0",
+        "gtfs-realtime-bindings": "^1.1.1",
         "lodash": "^4.17.21",
+        "papaparse": "^5.5.3",
         "vue": "^3.5.22",
         "vue-facing-decorator": "^4.0.1"
     },
     "devDependencies": {
-        "@types/lodash": "^4.17.20"
+        "@types/lodash": "^4.17.20",
+        "@types/papaparse": "^5.3.16"
     }
 }
