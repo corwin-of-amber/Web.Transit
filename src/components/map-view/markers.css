@@ -1,0 +1,23 @@
+
+.marker {
+    box-sizing: border-box;
+    height: 11px;
+    width: 11px;
+    border: 3px solid blue;
+    border-radius: 99px;
+    border-color: var(--color);
+    box-shadow: 0px 0px 2px 1px white;
+}
+
+.marker[data-route]::after {
+    content: attr(data-route);
+    position: absolute;
+    top: -5px;
+    right: 9px;
+    line-height: 1;
+    padding: 1px;
+    font-size: 11px;
+    background: #fffd;
+    border: 1px solid #777;
+    border-radius: 2px;
+}

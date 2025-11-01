@@ -35,10 +35,27 @@ class GTFS {
     
     async fetchRT() {
         const gtfsrt = require("gtfs-realtime-bindings");
-        return gtfsrt.transit_realtime.FeedMessage.decode(new global.Uint8Array(
-            await this.fetchRTBuffer()));
+        let data = new global.Uint8Array(await this.fetchRTBuffer()),
+            feed = gtfsrt.transit_realtime.FeedMessage.decode(data);
+
+        this.visit.message(feed);
+        return feed;
     }
     
+    getVehicleMarkers(feed: aux.FeedMessage & rt.IFeedMessage) {
+        return Object.fromEntries((feed.entity ?? [])
+            .flatMap(({vehicle: e, tripUpdate: tu}) => 
+                e ? [[e.vehicle.id, {at: this._lnglat(e.position), 
+                                     tag: {route: tu.trip.ref.route}}]]
+                  : []
+            )
+        );
+    }
+
+    _lnglat(pos: rt.IPosition) {
+        return [pos.longitude, pos.latitude];
+    }
+
     async fetchRTBuffer() {
         let resp = await fetch(this.config.realtimeEndpoint, {
             headers: {
@@ -87,6 +104,7 @@ namespace aux {
     export type TripDescriptor = {ref?: any}
     export type TripUpdate = {trip: TripDescriptor}
     export type FeedEntity = {tripUpdate?: TripUpdate}
+    export type FeedMessage = {entity: (rt.IFeedEntity & FeedEntity)[]}
 }
 
 

@@ -84,10 +84,7 @@ function fromObjects(objs: object[]) {
         objs.flatMap(o =>
             flattenObjectEntries(o).map(([k, v]) => k)));
 
-    console.log(header.gridify());
-
-    objs = objs.map(flattenObject); /** @todo make optional */
-
+    objs = objs.map(flattenObject); /** @todo not needed? traverse header instead */
 
     let proto = Object.fromEntries(objs.flatMap(o => Object.entries(o))),
         keys = Object.keys(proto);

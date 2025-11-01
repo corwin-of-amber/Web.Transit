@@ -22,24 +22,42 @@ function map2(container) {
     const MVT_TILE_URL = 'https://openfreemap.org/tiles/v3/{z}/{x}/{y}.pbf';
     const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
-    // 1. Define the coordinates for Tel Aviv (Longitude, Latitude)
-    const telAvivLonLat: LngLatLike = [34.7818, 32.0853];
+    // Dummy starting coordinates (Tel Aviv Center)
+    const telAvivCoords: LngLatLike = [34.7818, 32.0853];
 
-    // 2. Initialize the MapLibre GL Map
     const map = new maplibregl.Map({
         container,
         style: STYLE_URL,
-        center: telAvivLonLat,
+        center: telAvivCoords,
         zoom: 13,
         pitch: 0, 
         bearing: 0,
+        attributionControl: false
     });
 
-    // 3. Add navigation controls for a better user experience
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
     
-    console.log("MapLibre GL JS initialized. Attempting to render map with new style.");
+    // Remove public transit stations (need to place our own)
+    map.on('load', () => {    
+        for (let layer of ['poi_transit', 'poi_r1', 'poi_r7', 'poi_r20']) {
+            map.removeLayer(layer);
+    }});
+
+    Object.assign(window, {map});
+
+    return map;
 }
 
 
-export { map1, map2 }
+function marker(map: maplibregl.Map, at: LngLatLike) {
+
+    const el = document.createElement('div');
+    el.className = 'marker';
+
+    return new maplibregl.Marker({element: el})
+        .setLngLat(at)
+        .addTo(map);
+}
+
+
+export { map1, map2, marker }
