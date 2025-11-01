@@ -3,9 +3,11 @@
     "version": "0.1.0",
     "main": "build/kremlin/index.html",
     "dependencies": {
+        "@mapbox/mapbox-gl-rtl-text": "^0.3.0",
         "danfojs": "^1.2.0",
         "gtfs-realtime-bindings": "^1.1.1",
         "lodash": "^4.17.21",
+        "maplibre-gl": "^5.10.0",
         "papaparse": "^5.5.3",
         "vue": "^3.5.22",
         "vue-facing-decorator": "^4.0.1"
