@@ -1,5 +1,9 @@
 .*.swp
 node_modules
 /build
+/data/busgov/static.db
 /data/busofash/gtfs
+/data/motgov/gtfs
+/data/**/*.zip
+/data/**/secrets.json
 _npmlink

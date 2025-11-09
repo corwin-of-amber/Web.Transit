@@ -1,3 +1,5 @@
+import { DatabaseSync } from 'node:sqlite'; /** @kremlin.native */
+
 
 class BusGovAPI {
 
@@ -9,6 +11,7 @@ class BusGovAPI {
     get(func: 'GetBusLineListByYeshuv', city: number, day: number): Promise<BusGovAPI.LineProps[]>
     get(func: 'GetBusStopByMakat', stop: number): Promise<any>
     get(func: 'GetRealtimeBusLineListByBustop', stop: number): Promise<BusGovAPI.RealtimeEntryProps[]>
+    get(func: 'GetScheduleList', day: number, fromPlace: number, reserved0: 0, reserved1: 0, toPlace: number, line: number): Promise<any[]>
 
     async get(func: string, ...args: (string | number)[]): Promise<any> {
         let path = [func, ...args, ...this.suffix].join('/'),
@@ -38,11 +41,73 @@ class BusGovAPI {
         else
             throw new Error(`api call failed (${resp.status} ${resp.statusText})`)
     }
+
+    static DATE_FMT = Intl.DateTimeFormat('en-IL',
+        {year: 'numeric', month: '2-digit', day: '2-digit'});
 }
 
+class BusGovDB {
+    owner: BusGov
+    db = new DatabaseSync('data/busgov/static.db')
+    lines = new BaseTable(this.db, 'lines').withCtor(_ => new Line(this.owner, _ as any));
+    stops = new BaseTable(this.db, 'stops').withCtor(_ => new Stop(this.owner, _ as any));
+
+    constructor(owner: BusGov) {
+        this.owner = owner;
+    }
+
+    init() {
+        this.lines.init();
+        this.stops.init();
+    }
+}
+
+class BaseTable<Obj extends {_: IdName}> {
+    db: DatabaseSync
+    name: string
+    ctor: (rec: object) => Obj
+
+    constructor(db: DatabaseSync, name: string) {
+        this.db = db;
+        this.name = name;
+        this.ctor = x => x as Obj;
+    }
+
+    withCtor(ctor: (rec: object) => Obj) {
+        this.ctor = ctor; return this;
+    }
+
+    init() {
+        this.db.exec(`
+            CREATE TABLE IF NOT EXISTS ${this.name} 
+            (id INT PRIMARY KEY, name TEXT, json TEXT) STRICT`);
+    }
+
+    all() {
+        let s = this.db.prepare(`SELECT json FROM lines`);
+
+        return [...s.iterate()].map(({json}) => this.ctor(JSON.parse(json as string)));
+    }
+
+    get(id: number) {
+        let s = this.db.prepare(`SELECT json FROM lines WHERE id=?`),
+            rec = s.get(id);
+
+        return rec && this.ctor(JSON.parse(rec.json as string));
+    }
+
+    add(obj: Obj) {
+        let s = this.db.prepare(`
+            INSERT INTO ${this.name}(id,name,json) VALUES (?,?,?)
+            ON CONFLICT(id) DO UPDATE 
+              SET name=excluded.name, json=excluded.json`);
+        s.run(obj._.id, obj._.name, JSON.stringify(obj._));
+    }
+}
 
 class BusGov {
     api = new BusGovAPI
+    db = new BusGovDB(this)
 
     async days() {
         return (await this.api.get('getDateList'))
@@ -59,10 +124,13 @@ class BusGov {
     }
 
     today() {
-        let n = new Date(),
-            name = `${n.getDate()}/${n.getMonth() + 1}/${n.getFullYear()}`;
-        return new Day(this, {id: 1, name});
-    }    
+        return new Day(this, {id: 1,
+            name: BusGovAPI.DATE_FMT.format(new Date())});
+    }
+
+    stop(id: number) {
+        return new Stop(this, {id, name: '?'});
+    }
 
     TLV = new City(this, {id: 5000, name: 'תל אביב'})
 }
@@ -98,7 +166,7 @@ export class City extends EntityBase<IdName> {
 export class Line extends EntityBase<IdName & {company: IdName}> {
     async routes() {
         /** @todo may not be the most general and does not cover variants */
-        return [1, 2].map(dir => this.route(dir));
+        return Promise.all([1, 2].map(dir => this.route(dir)));
     }
 
     async route(dir = 1) {

@@ -1,36 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
+import { GTFS as GTFSBase } from './gtfs';
 
 import type { transit_realtime as rt } from 'gtfs-realtime-bindings';
 
 
-type GTFSConfig = {basedir: string, realtimeEndpoint: URL};
-
-class GTFS {
-    config: GTFSConfig
-
-    static: {trips: any[], routes: any[]}
+class GTFS extends GTFSBase {
     visit = new Visitor(this)
     
-    constructor(config: GTFSConfig) {
-        this.config = config
-        this.static = Object.fromEntries(
-            ['trips', 'routes'].map(k =>
-                [k, this.getCSV(`${k}.txt`)])) as any;
-    }
-
     getCSV(fn: string) {
         fn = path.join(this.config.basedir, fn);
         return Papa.parse(fs.readFileSync(fn, 'utf-8'), {header: true}).data;
     }
 
     tripById(id: string) {
-        return this.static.trips.find(t => t.trip_id == id);
+        return this.static.tables.trips.all().find(t => t.trip_id == id);
     }
 
     routeById(id: string) {
-        return this.static.routes.find(r => r.route_id == id);
+        return this.static.tables.routes.all().find(r => r.route_id == id);
     }
     
     async fetchRT() {
@@ -69,7 +58,18 @@ class GTFS {
         else
             throw new Error(`[gtfs] api error ${resp.status} ${resp.statusText}`);
     }
+
+    translateTripUpdate(tu: rt.ITripUpdate & aux.TripUpdate) {
+        let stop_times = this.static.tables.stop_times.all().filter(e => e.trip_id === tu.trip.tripId),
+            seq = tu.stopTimeUpdate.map(e => {
+                let stopt = stop_times.find(s => s.stop_sequence == e.stopSequence),
+                    stop = this.static.tables.stops.all().find(s => s.stop_id === stopt.stop_id);
+                return [stop, this.visit.date(e.arrival as any)];
+            });
+        return {trip: tu.trip.ref, seq};
+    }
 }
+
 
 class Visitor {
     o: GTFS
@@ -96,6 +96,14 @@ class Visitor {
         if (e.ref) {
             e.ref.route = this.o.routeById(e.ref.route_id);
         }
+    }
+
+    /**
+     * @note arrival/departure are represetned by `{time: Long | number}`
+     *   in the standard, but `Long` may be stored as a string instead.
+     */
+    date(e: {time: string | number}) {
+        return new Date(+e.time * 1e3);
     }
 }
 
