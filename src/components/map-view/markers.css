@@ -3,10 +3,34 @@
     box-sizing: border-box;
     height: 11px;
     width: 11px;
-    border: 3px solid blue;
+    border: 3px solid;
     border-radius: 99px;
-    border-color: var(--color);
+    border-color: var(--color, blue);
     box-shadow: 0px 0px 2px 1px white;
+
+    cursor: pointer;
+    --clearance: 5px;
+}
+
+.marker.marker--stop {
+    height: 0;
+    width: 0;
+    border-width: calc(clamp(1px, (var(--zoom) - 12) * 0.5px, 2px) * 2);
+    border-radius: 1px;
+}
+
+.marker::before {
+    content: "";
+    position: absolute;
+    top:    50%;
+    left:   50%;
+    height: calc(100% + 2 * var(--clearance));
+    width:  calc(100% + 2 * var(--clearance));
+    transform: translate(-50%, -50%);
+    border-radius: 36%;
+}
+.marker:hover::before {
+    border: 1px solid gray;
 }
 
 .marker[data-route]::after {
