@@ -8,7 +8,7 @@ class MotGov {
 
     stopsAround(c: XY = MotGov.TLV_CENTER) {
         let all_stops = this.static.tables.stops.all().map(s =>
-            ({...s, at: [+s.stop_lon, +s.stop_lat]}));
+            ({at: [s.stop_lon, s.stop_lat] as XY, tag: {stop: s}}));
         return _.sortBy(all_stops, p => dist2(p.at, c));
     }
 
