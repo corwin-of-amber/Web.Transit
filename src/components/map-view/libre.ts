@@ -25,6 +25,8 @@ function map2(container) {
     // Dummy starting coordinates (Tel Aviv Center)
     const telAvivCoords: LngLatLike = [34.7818, 32.0853];
 
+    const lang = 'he';
+
     const map = new maplibregl.Map({
         container,
         style: STYLE_URL,
@@ -36,12 +38,21 @@ function map2(container) {
     });
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
-    
+
     // Remove public transit stations (need to place our own)
-    map.on('load', () => {    
+    map.on('style.load', () => {    
         for (let layer of ['poi_transit', 'poi_r1', 'poi_r7', 'poi_r20']) {
             map.removeLayer(layer);
-    }});
+        }
+    });
+
+    // Set language
+    map.on('style.load', () => {    
+        for (let layer of map.getStyle().layers) {
+            if (layer.type == 'symbol' && (!layer.layout?.['icon-image'] || layer.layout?.['icon-allow-overlap']))
+                map.setLayoutProperty(layer.id, 'text-field', ['get', `name:${lang}`])
+        }
+    });
 
     Object.assign(window, {map});
 
