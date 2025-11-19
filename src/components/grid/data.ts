@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { flatmap, imap } from 'itertools';
 import { Cell } from './index.vue';
 
 
@@ -44,9 +45,13 @@ class Gridlet {
 
 
 class HierarchicalHeader {
-    labels: NestedMap<string> = new Map
+    labels: NestedMap<string>
 
-    fromKeyPaths(keypaths: string[][]) {
+    constructor(labels?: HierarchicalHeader['labels']) {
+        this.labels = labels ?? new Map;
+    }
+
+    fromKeyPaths(keypaths: Iterable<string[]>) {
         for (let key of keypaths) {
             let hm = this.labels;
             for (let el of key) {
@@ -56,6 +61,18 @@ class HierarchicalHeader {
             }
         }
         return this;
+    }
+
+    forObjects(objs: object[]) {
+        return this.fromKeyPaths(flatmap(objs, o =>
+            flattenObjectEntries(o).map(([k, v]) => k)));
+    }
+
+    sub(kp: string[]) {
+        let h = this.labels;
+        for (let k of kp) h = h?.get(k);
+        if (!h) throw new Error(`no subheader: '${kp}'`)
+        return new HierarchicalHeader(h);
     }
 
     gridify() {
@@ -73,6 +90,19 @@ class HierarchicalHeader {
             return grid;
         }
     }
+
+    *traverse(obj: any) {
+        yield* aux(obj, this.labels);
+
+        function *aux(obj: any, h: NestedMap<string>, pfx: string[] = []) {
+            if (h.size === 0 || Array.isArray(obj)) yield [pfx, obj]
+            else {
+                for (let [k, v] of h.entries()) {
+                    yield* aux(obj?.[k], v, [...pfx, k]);
+                }
+            }
+        }
+    }
 }
 
 type NestedMap<T> = Map<string, NestedMap<T>>;
@@ -80,16 +110,19 @@ type NestedMap<T> = Map<string, NestedMap<T>>;
 
 
 function fromObjects(objs: object[]) {
-    let header = new HierarchicalHeader().fromKeyPaths(
-        objs.flatMap(o =>
-            flattenObjectEntries(o).map(([k, v]) => k)));
 
-    objs = objs.map(flattenObject); /** @todo not needed? traverse header instead */
+    let header = new HierarchicalHeader().forObjects(objs);
 
-    let proto = Object.fromEntries(objs.flatMap(o => Object.entries(o))),
-        keys = Object.keys(proto);
-    return [...header.gridify().d,
-        ...objs.map(row => keys.map(k => ({text: row[k] ?? ''})))];
+    function subrows(objs: any[], header: HierarchicalHeader) {
+        return objs.map(row => [...header.traverse(row)].map(([kp, v]) =>
+            Array.isArray(v) ? {subrows: subrows(v, header.sub(kp))}
+                             : {text: v ?? ''}));
+    }
+
+    return [
+        ...header.gridify().d,
+        ...subrows(objs, header)
+    ];
 }
 
 function flattenObject(o: object) {
@@ -97,12 +130,24 @@ function flattenObject(o: object) {
 }
 
 function flattenObjectEntries(o: object) {
-    if (typeof o['_'] === 'object') o = o['_'];
-    return Object.entries(o).flatMap(([k ,v]) =>
-        typeof v === 'object' && v !== null && !Array.isArray(v) ?
-            flattenObjectEntries(v).map(([subk, subv]) => [[k, ...subk], subv])
-           : [[[k], v]]
-    );
+    return [...iflattenObjectEntries(o)];
+}
+
+function *iflattenObjectEntries(o: object) {
+    if (Array.isArray(o)) {
+        for (let el of o) {
+            yield* typeof el === 'object' ?
+                iflattenObjectEntries(el) : [[[], el]];
+        }
+    }
+    else {
+        if (typeof o['_'] === 'object') o = o['_'];
+        yield* flatmap(Object.entries(o), ([k ,v]) =>
+            typeof v === 'object' && v !== null ?
+                imap(iflattenObjectEntries(v), ([subk, subv]) => [[k, ...subk], subv])
+              : [[[k], v]]
+        );
+    }
 }
 
 export { Gridlet, HierarchicalHeader, 
