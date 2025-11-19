@@ -46,19 +46,20 @@ function map2(container) {
         }
     });
 
-    // Set language
+    setLanguage(map, lang);
+
+    return map;
+}
+
+
+function setLanguage(map: maplibregl.Map, lang: string) {
     map.on('style.load', () => {    
         for (let layer of map.getStyle().layers) {
             if (layer.type == 'symbol' && (!layer.layout?.['icon-image'] || layer.layout?.['icon-allow-overlap']))
                 map.setLayoutProperty(layer.id, 'text-field', ['get', `name:${lang}`])
         }
     });
-
-    Object.assign(window, {map});
-
-    return map;
 }
-
 
 function marker(map: maplibregl.Map, at: LngLatLike) {
 

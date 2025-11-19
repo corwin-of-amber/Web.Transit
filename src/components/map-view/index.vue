@@ -1,6 +1,6 @@
 <template>
-    <div ref='map' :style="{width: '750px', height: '500px', '--zoom': zoom}"
-        @mousedown="onMouseDown"></div>
+    <div ref='map' class="mapview" :style="{'--zoom': zoom}">
+    </div>
 </template>
 
 <style>
@@ -8,32 +8,38 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, toNative } from 'vue-facing-decorator';
-import type { Marker } from 'maplibre-gl';
+import type { Map as MapLibre, MapMouseEvent, Marker } from 'maplibre-gl';
 
 import { map2, marker } from './libre';
 import './markers.css';
 
 
 @Component({
-    emits: ['marker:mousedown']
+    emits: ['mousedown', 'poke', 'marker:mousedown']
 })
 class IMapView extends Vue {
     @Prop
     markers: {[id: string]: {at: XY, tag?: Tag}} = {}
     
+    map: MapLibre
     _markers: Map<string, Marker> = new Map
 
     zoom: number = undefined
+    _clicking: boolean = false
 
     mounted() {
         let map = map2(this.$refs.map);
         this.zoom = map.getZoom();
         map.on('zoom', () => this.zoom = map.getZoom());
 
-        map.on('mousedown', (e) => {
-            const features = map.queryRenderedFeatures(e.point);
-            console.log(features);
+        map.on('mousedown', ev => {
+            this.onMouseDown(ev.originalEvent) ||
+                this.onMapMouseDown(ev);
         });
+        map.on('mouseup', ev => this.onMapMouseUp(ev));
+        map.on('drag', () => this._clicking = false); // prevent poke
+
+        this.map = map;
 
         this.$watch('markers', (m: typeof this.markers) => {
             for (let [k, v] of Object.entries(m)) {
@@ -65,7 +71,20 @@ class IMapView extends Vue {
                 marker: this.markers[key],
                 glmarker: this._markers.get(key)
             });
+            return true;
         }
+    }
+
+    onMapMouseDown(ev: MapMouseEvent) {
+        const features = this.map.queryRenderedFeatures(ev.point);
+        console.log(ev, features);
+        this.$emit('mousedown', ev);
+        this._clicking = true;
+    }
+
+    onMapMouseUp(ev: MapMouseEvent) {
+        if (this._clicking) this.$emit('poke', ev);
+        this._clicking = false;
     }
 
     configureMarker(mark: Marker, key: string, tag: Tag) {
@@ -80,6 +99,9 @@ class IMapView extends Vue {
             e.classList.add('marker--stop');
             e.setAttribute('data-stop_id', tag.stop.stop_id);
         }
+        if (tag?.kind) {
+            e.classList.add(`marker--${tag.kind}`);
+        }
     }
 }
 
@@ -87,7 +109,8 @@ class IMapView extends Vue {
 type XY = [number, number];
 type Tag = {
     route?: {route_short_name: string, route_color: string}
-    stop?: {stop_id: string}
+    stop?: {stop_id: string},
+    kind?: string
 };
 
 
