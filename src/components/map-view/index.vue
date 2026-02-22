@@ -114,6 +114,6 @@ type Tag = {
 };
 
 
-export { IMapView }
+export { IMapView, Marker, Tag }
 export default toNative(IMapView);
 </script>

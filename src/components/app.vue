@@ -14,7 +14,8 @@
 import { Vue, Component, toNative } from 'vue-facing-decorator';
 import { MapMouseEvent } from 'maplibre-gl';
 import Grid, { data as gridData }  from './grid';
-import MapView, { IMapView } from './map-view/index.vue';
+import MapView, { IMapView, Tag } from './map-view/index.vue';
+import { XY } from '../infra/geom2d';
 
 import sampleMarkers from '../../data/sample-markers';
 
@@ -26,18 +27,26 @@ class IApp extends Vue {
     markers: IMapView['markers'] = sampleMarkers as any;
 
     gridData(data: any[]) {
+        if (!Array.isArray(data))
+            data = Object.entries(data).map(([k, v]) => ({k, v}));
         return gridData.fromObjects(data);
     }
 
     onMarker(ev) {
-        console.log(ev);
+        let m = ev.marker;
+        if (m.tag?.stop) {
+            this.markers['selected'] =
+                this.mark('stop/selected', m.at, {stop: m.tag.stop});
+        }
     }
 
     onMapPoke(ev: MapMouseEvent) {
-        this.markers['poke'] = {
-            tag: {kind: 'poke'},
-            at: [ev.lngLat.lng, ev.lngLat.lat]
-        }
+        this.markers['poke'] =
+            this.mark('poke', [ev.lngLat.lng, ev.lngLat.lat]);
+    }
+
+    mark(kind: string, at: XY, props: Partial<Tag> = {}) {
+        return {tag: {kind, ...props}, at};
     }
 }
 

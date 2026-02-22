@@ -143,7 +143,7 @@ function *iflattenObjectEntries(o: object) {
     else {
         if (typeof o['_'] === 'object') o = o['_'];
         yield* flatmap(Object.entries(o), ([k ,v]) =>
-            typeof v === 'object' && v !== null ?
+            typeof v === 'object' && v !== null && !(v instanceof Date) ?
                 imap(iflattenObjectEntries(v), ([subk, subv]) => [[k, ...subk], subv])
               : [[[k], v]]
         );

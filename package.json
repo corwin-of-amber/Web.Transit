@@ -4,7 +4,9 @@
     "main": "build/kremlin/index.html",
     "dependencies": {
         "@mapbox/mapbox-gl-rtl-text": "^0.3.0",
+        "@vueuse/core": "^14.2.1",
         "danfojs": "^1.2.0",
+        "fflate": "^0.8.2",
         "gtfs-realtime-bindings": "^1.1.1",
         "itertools": "^2.5.0",
         "lodash": "^4.17.21",
