@@ -80,8 +80,18 @@ class ITabular extends Vue {
     }
 
     selectCell(ev: MouseEvent) {
-        let cst = getComputedStyle(ev.target as Element);
-        this.sel = {row: +cst.gridRowStart, col: +cst.gridColumnStart};
+        let cell = this.closestCell(ev.target as Element);
+        if (cell) {
+            let cst = getComputedStyle(cell);
+            this.sel = {row: +cst.gridRowStart, col: +cst.gridColumnStart};
+        }
+    }
+
+    closestCell(el: Element) {
+        while (el) {
+            if (el.parentElement === this.$el) return el;
+            el = el.parentElement;
+        }
     }
 }
 

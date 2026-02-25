@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { flatmap, imap } from 'itertools';
 import { Cell } from './index.vue';
+import { dateTimeShort } from '../../infra/datetime';
 
 
 class Gridlet {
@@ -105,6 +106,10 @@ class HierarchicalHeader {
     }
 }
 
+class GridWidget {
+    constructor(public payload: object) { }
+}
+
 type NestedMap<T> = Map<string, NestedMap<T>>;
 
 
@@ -116,13 +121,28 @@ function fromObjects(objs: object[]) {
     function subrows(objs: any[], header: HierarchicalHeader) {
         return objs.map(row => [...header.traverse(row)].map(([kp, v]) =>
             Array.isArray(v) ? {subrows: subrows(v, header.sub(kp))}
-                             : {text: v ?? ''}));
+                             : valueDisplay(v)));
     }
 
     return [
         ...header.gridify().d,
         ...subrows(objs, header)
     ];
+}
+
+/**
+ * Creates a canonical textual or other display for a value.
+ * (for now, not much to see here.)
+ */
+function valueDisplay(value: any) {
+    if (typeof value === 'number' && !Number.isInteger(value))
+        return {text: Math.round(value * 1e5) / 1e5};
+    else if (value instanceof Date)
+        return {text: dateTimeShort(value)};
+    else if (value instanceof GridWidget)
+        return value.payload;
+    else
+        return {text: value ?? ''}
 }
 
 function flattenObject(o: object) {
@@ -143,12 +163,12 @@ function *iflattenObjectEntries(o: object) {
     else {
         if (typeof o['_'] === 'object') o = o['_'];
         yield* flatmap(Object.entries(o), ([k ,v]) =>
-            typeof v === 'object' && v !== null && !(v instanceof Date) ?
+            typeof v === 'object' && v !== null && !(v instanceof Date || v instanceof GridWidget) ?
                 imap(iflattenObjectEntries(v), ([subk, subv]) => [[k, ...subk], subv])
               : [[[k], v]]
         );
     }
 }
 
-export { Gridlet, HierarchicalHeader, 
+export { Gridlet, HierarchicalHeader, GridWidget,
          fromObjects, flattenObject, flattenObjectEntries }

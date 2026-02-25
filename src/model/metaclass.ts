@@ -50,7 +50,9 @@ class Meta {
         };
     }
 
-    static desc(fn: (value: any) => any) {
+    static desc(fn: MetaDecorator | ((value: any) => any)) {
+        if (fn instanceof MetaDecorator)
+            fn = fn[Meta.decorate].bind(fn) as ((value: any) => any);
         return (target: object, name: string, descriptor: PropertyDescriptor) => {
             descriptor.value = fn(descriptor.value);
             return descriptor;
@@ -70,7 +72,14 @@ class Meta {
             return descriptor;
         };
     }
+
+    static readonly decorate = Symbol.for('MetaDecorator.apply')
 }
 
 
-export { Meta }
+abstract class MetaDecorator {
+    abstract [Meta.decorate](v: any): any
+}
+
+
+export { Meta, MetaDecorator }

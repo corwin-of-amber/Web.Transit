@@ -22,15 +22,16 @@ function map2(container) {
     const MVT_TILE_URL = 'https://openfreemap.org/tiles/v3/{z}/{x}/{y}.pbf';
     const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
-    // Dummy starting coordinates (Tel Aviv Center)
+    // Dummy starting coordinates (Tel Aviv Center, Haifa Technion)
     const telAvivCoords: LngLatLike = [34.7818, 32.0853];
+    const haifaCoords: LngLatLike = [35.020045135920896, 32.77855831718648];
 
     const lang = 'he';
 
     const map = new maplibregl.Map({
         container,
         style: STYLE_URL,
-        center: telAvivCoords,
+        center: haifaCoords,
         zoom: 13,
         pitch: 0, 
         bearing: 0,

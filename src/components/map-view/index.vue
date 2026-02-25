@@ -42,7 +42,7 @@ class IMapView extends Vue {
         this.map = map;
 
         this.$watch('markers', (m: typeof this.markers) => {
-            for (let [k, v] of Object.entries(m)) {
+            for (let [k, v] of Object.entries(m ?? {})) {
                 let mark = this._markers.get(k);
                 if (mark)
                     mark.setLngLat(v.at);

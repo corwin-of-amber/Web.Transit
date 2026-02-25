@@ -4,6 +4,13 @@
             <div v-if="component.text !== undefined" v-text="component.text"
                 :class="classFor(component, i, j)"
                 :style="styleFor(component, i, j)"></div>
+            <div v-if="component.vue !== undefined"
+                :class="classFor(component, i, j)"
+                :style="styleFor(component, i, j)">
+                <component :is="component.vue.type"
+                    :="component.vue.props" v-on="component.vue.handlers"/>
+            </div>
+
             <template v-if="component.subrows">
                 <GridRows :rows="component.subrows"
                           :startPos="{row: startPos.row + startHeight(i), 
